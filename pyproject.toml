@@ -6,7 +6,9 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "boto3>=1.37.37",
+    "celery>=5.5.1",
     "fastapi>=0.115.12",
+    "pillow>=11.2.1",
     "python-dotenv>=1.1.0",
     "python-multipart>=0.0.20",
     "redis>=5.2.1",
