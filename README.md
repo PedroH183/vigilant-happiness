@@ -1,6 +1,6 @@
 # Image Compressor Service
 
-A scalable microservice for compressing and efficiently managing images using AWS S3, Redis Streams, and Celery.
+A scalable microservice for compressing and managing images using AWS S3, Redis Streams, and Celery using Python.
 
 ## 🚀 Features
 
@@ -72,6 +72,6 @@ docker-compose up --build
 
 ## 🐳 Docker Services
 
-- \`api\`: FastAPI application
-- \`worker\`: Celery worker
-- \`redis\`: Redis server
+- `api`: FastAPI application
+- `worker`: Celery worker
+- `redis`: Redis server
