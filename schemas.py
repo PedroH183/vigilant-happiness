@@ -5,6 +5,10 @@ class StatusEnum(str, Enum):
     SUCCESS = "success"
     ERROR = "error"
 
+class StreamsName(str, Enum):
+    UPLOAD = "imagem_upload"
+    COMPRESSAO = "compressao_concluida"
+
 class ImageUploadResponse(BaseModel):
     status: StatusEnum
     message: str
