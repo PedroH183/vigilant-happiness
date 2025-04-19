@@ -1,7 +1,8 @@
 import uuid
 from fastapi import UploadFile, File, APIRouter
 from s3_buckets_images_manager import S3BucketsImages, S3UploadSchema
-from schemas import ErrorResponse, ImageUploadResponse, StatusEnum
+from schemas import ErrorResponse, ImageUploadResponse, StatusEnum, StreamsName
+from redis_streams_manager import RedisStreamsManager
 
 router = APIRouter(tags=["Streams Manager"])
 
@@ -15,11 +16,8 @@ router = APIRouter(tags=["Streams Manager"])
 async def image_upload(data: UploadFile = File(...)):
     try:
         content = await data.read()
-
-        # Generate a unique ID for the image
         image_id = str(uuid.uuid4())
 
-        # Upload to S3
         s3_client = S3BucketsImages.get_client()
         upload_object_params = S3UploadSchema(
             content     = content,
@@ -28,6 +26,10 @@ async def image_upload(data: UploadFile = File(...)):
             image_id    = image_id
         )
         result = S3BucketsImages.put_object(s3_client, upload_object_params)
+
+        if result:
+            RedisStreamsManager.get_client()
+            RedisStreamsManager.publish_image(image_id, data.filename, StreamsName.COMPRESSAO)
 
         return ImageUploadResponse(
             image_id= image_id,
