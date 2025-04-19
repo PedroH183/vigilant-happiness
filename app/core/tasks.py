@@ -1,19 +1,19 @@
-import boto3
 import io
 import os
+import boto3
 import logging
 from PIL import Image
 from celery import Celery
 
-from redis_streams_manager import RedisStreamsManager
-from s3_buckets_images_manager import S3BucketsImages, S3GetSchema, S3UploadSchema
-from schemas import StreamsName
+from models.schemas import S3GetSchema, S3UploadSchema, StreamsName
+from services.redis_service import RedisStreamsManager
+from services.s3_service import S3BucketsImages
 
 
 redis_broker = f"redis://{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}/{os.getenv('REDIS_DB')}"
 
 app = Celery("tasks")
-app.config_from_object("celeryconfig")
+app.config_from_object("celery_config")
 
 s3_client = boto3.client("s3")
 BUCKET_NAME = os.getenv("AWS_BUCKET_NAME")

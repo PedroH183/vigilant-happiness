@@ -2,19 +2,23 @@ import io
 import uuid
 import logging
 from typing import Optional, Dict
-from tasks import compress_image_task
 from fastapi.responses import StreamingResponse
-from redis_streams_manager import RedisStreamsManager
 from fastapi import HTTPException, UploadFile, File, APIRouter
-from s3_buckets_images_manager import S3BucketsImages, S3UploadSchema
-from schemas import ErrorResponse, ImageIndex, ImageIndexResponse, ImageUploadResponse, S3GetSchema, StatusEnum, StreamsName
 
-router = APIRouter(tags=["Streams Manager"])
+from core.tasks import compress_image_task
+from services.redis_service import RedisStreamsManager
+from services.s3_service import S3BucketsImages, S3UploadSchema
+
+from models.schemas import (
+    ErrorResponse, ImageIndex, ImageIndexResponse,
+    ImageUploadResponse, S3GetSchema, StatusEnum, StreamsName
+)
+
+router = APIRouter(tags=["Images"], prefix="/api/v1")
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
-
 
 @router.post("/image_upload", 
     response_model=ImageUploadResponse, 
@@ -31,8 +35,8 @@ async def image_upload(data: UploadFile = File(...)):
         s3_client = S3BucketsImages.get_client()
         upload_object_params = S3UploadSchema(
             content     = content,
-            content_type= data.content_type,
-            filename    = data.filename,
+            content_type= data.content_type, # type: ignore
+            filename    = data.filename, # type: ignore
             image_id    = image_id
         )
         result = S3BucketsImages.put_object(s3_client, upload_object_params)
@@ -59,9 +63,8 @@ async def image_upload(data: UploadFile = File(...)):
 
 @router.get("/image/{image_id}")
 async def get_image_binary(image_id: str):
-
     RedisStreamsManager.get_client()
-    image_obj: Optional[Dict] = RedisStreamsManager.get_image_json(image_id) # type: ignore
+    image_obj: Optional[Dict] = RedisStreamsManager.get_image_json(image_id)
 
     if not image_obj:
         raise HTTPException(
@@ -79,7 +82,7 @@ async def get_image_binary(image_id: str):
     s3_client = S3BucketsImages.get_client()
     compressed_key = f"images/{image_id}/{image_obj['filename']}"
 
-    logging.info(f"GENRATED KEY ::: {compressed_key}")
+    logging.info(f"GENERATED KEY: {compressed_key}")
 
     try:
         params = S3GetSchema(s3_key=compressed_key)
@@ -104,29 +107,29 @@ async def get_image_binary(image_id: str):
     )
 
 
-@router.get("/images/list_indexs", response_model=ImageIndexResponse)
-async def get_images_indexs():
+@router.get("/images", response_model=ImageIndexResponse)
+async def get_images_indexes():
+    try:
+        images = {}
+        redis_client = RedisStreamsManager.get_client()
+        upload_stream = redis_client.xread({StreamsName.UPLOAD: '0'})
 
-    images = {}
-    redis_client = RedisStreamsManager.get_client()
-    upload_stream = redis_client.xread({StreamsName.UPLOAD: '0'})
+        # Process upload stream
+        if upload_stream:
+            for _, messages in upload_stream: # type: ignore
+                for msg_id, data in messages:
+                    images[data['image_id']] = ImageIndex(
+                        image_id=data['image_id'],
+                        filename=data['filename'],
+                    )
 
-    if not upload_stream:
         return ImageIndexResponse(
             status="success",
-            indexes=[]
+            indexes=list(images.values())
         )
 
-    if upload_stream:
-        upload_stream = upload_stream # type: ignore
-        for _, messages in upload_stream: # type: ignore
-            for msg_id, data in messages:
-                images[data['image_id']] = ImageIndex(
-                    image_id=data['image_id'],
-                    filename=data['filename'],
-                )
-
-    return ImageIndexResponse(
-        status="success",
-        indexes=list(images.values())
-    )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error listing images: {str(e)}"
+        )

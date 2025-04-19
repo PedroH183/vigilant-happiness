@@ -7,6 +7,8 @@ services:
       - redis
     volumes:
       - .:/app
+    environment:
+      - PYTHONPATH=/app
 
   redis:
     image: redis:alpine
@@ -18,11 +20,13 @@ services:
   compressor_worker:
     build: .
     container_name: celery_worker
-    command: celery -A tasks worker --loglevel=info
+    command: celery -A core.tasks worker --loglevel=info
     volumes:
       - .:/app
     depends_on:
       - redis
+    environment:
+      - PYTHONPATH=/app
 
 volumes:
   redis_data:
