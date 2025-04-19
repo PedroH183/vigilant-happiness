@@ -15,5 +15,14 @@ services:
     volumes:
       - redis_data:/data
 
+  compressor_worker:
+    build: .
+    container_name: celery_worker
+    command: celery -A tasks worker --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+
 volumes:
   redis_data:
