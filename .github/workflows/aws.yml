@@ -10,7 +10,7 @@ env:
   ECS_SERVICE: DevTask-service-92xwzifx
   ECS_CLUSTER: dev_cluster
   ECS_TASK_DEFINITION: ./task_definition.json
-  CONTAINER_NAME: dev_test
+  CONTAINER_NAME: RegisterDevTest
 
 permissions:
   contents: read
