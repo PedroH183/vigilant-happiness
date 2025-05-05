@@ -1,0 +1,38 @@
+{
+    "family": "DevTask",
+    "containerDefinitions": [
+        {
+            "name": "RegisterDevTest",
+            "image": "471112740628.dkr.ecr.sa-east-1.amazonaws.com/testes",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "name": "registerdevtest-80-tcp",
+                    "containerPort": 80,
+                    "hostPort": 80,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
+            "essential": true,
+            "environment": [],
+            "environmentFiles": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "ulimits": [],
+            "systemControls": []
+        }
+    ],
+    "executionRoleArn": "arn:aws:iam::471112740628:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "volumes": [],
+    "placementConstraints": [],
+    "requiresCompatibilities": [],
+    "cpu": "1024",
+    "memory": "3072",
+    "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
+    },
+    "enableFaultInjection": false
+}
